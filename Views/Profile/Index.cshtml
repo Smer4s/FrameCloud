@@ -1,8 +1,12 @@
 ﻿@{
-	ViewData["Title"] = "Profile";
+	ViewData["Title"] = "Профиль";
 }
 
 <div class="text-center">
-	<h1 class="display-4">Profile Page</h1>
-	<p>Здесь будет профиль пользователя.</p>
+	<h1 class="display-4">Профиль пользователя</h1>
+	<p>Здесь будет информация о твоём аккаунте.</p>
+
+	<form asp-controller="Account" asp-action="Logout" method="post">
+		<button type="submit" class="btn btn-danger mt-3">Выйти</button>
+	</form>
 </div>

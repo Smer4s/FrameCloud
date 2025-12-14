@@ -1,40 +1,75 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FrameCloud.Auth;
+using FrameCloud.Data;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FrameCloud.Controllers;
 
-public class AccountController : Controller
+public class AccountController(IUserRepository users, ITokenService tokens) : Controller
 {
 	[HttpGet]
-	public IActionResult Login()
-	{
-		return View();
-	}
+	public IActionResult Login() => View();
 
 	[HttpPost]
-	public IActionResult Login(string login, string password)
+	public async Task<IActionResult> Login(LoginRequest request)
 	{
-		// здесь будет логика проверки пользователя
-		// пока просто редиректим на профиль
-		return RedirectToAction("Index", "Profile");
+		var user = await users.GetByLoginAsync(request.Login);
+		if (user is null)
+		{
+			ModelState.AddModelError(string.Empty, "Неправильный логин или пароль");
+			return View(request);
+		}
+
+		var hash = PasswordHasher.Hash(request.Password);
+		if (!string.Equals(hash, user.Password, StringComparison.OrdinalIgnoreCase))
+		{
+			ModelState.AddModelError(string.Empty, "Неправильный логин или пароль");
+			return View(request);
+		}
+
+		var token = tokens.CreateToken(user.Id, user.RoleId, user.Login);
+
+		Response.Cookies.Append("AuthToken", token, new CookieOptions
+		{
+			HttpOnly = true,
+			Secure = true,
+			SameSite = SameSiteMode.Strict,
+			Expires = DateTime.UtcNow.AddHours(2)
+		});
+
+		return RedirectToAction("Index", "Home");
 	}
+
 
 	[HttpGet]
-	public IActionResult Register()
+	public IActionResult Register() => View();
+
+	[HttpPost]
+	public async Task<IActionResult> Register(RegisterRequest request)
 	{
-		return View();
+		var existing = await users.GetByLoginAsync(request.Login);
+		if (existing is not null) return Conflict();
+
+		var hash = PasswordHasher.Hash(request.Password);
+		var userId = await users.CreateUserAsync(roleId: 1, login: request.Login, passwordHash: hash);
+		if (userId is null) return BadRequest();
+
+		var token = tokens.CreateToken(userId.Value, 1, request.Login);
+
+		Response.Cookies.Append("AuthToken", token, new CookieOptions
+		{
+			HttpOnly = true,
+			Secure = true,
+			SameSite = SameSiteMode.Strict,
+			Expires = DateTime.UtcNow.AddHours(2)
+		});
+
+		return RedirectToAction("Index", "Home");
 	}
 
 	[HttpPost]
-	public IActionResult Register(string login, string password)
-	{
-		// здесь будет логика создания пользователя
-		// пока просто редиректим на страницу входа
-		return RedirectToAction("Login");
-	}
-
 	public IActionResult Logout()
 	{
-		// здесь будет логика выхода
+		Response.Cookies.Delete("AuthToken");
 		return RedirectToAction("Index", "Home");
 	}
 }

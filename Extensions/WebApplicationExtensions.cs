@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Npgsql;
 using Serilog;
+using FrameCloud.Data;
 
 namespace FrameCloud.Extensions;
 
@@ -14,9 +15,16 @@ public static class WebApplicationExtensions
 		connection.Open();
 
 		var sqlScript = File.ReadAllText("schema.sql");
-
 		await connection.ExecuteAsync(sqlScript);
 
 		Log.Information("Database Scheme Created/Updated");
+
+		var seeders = new List<Seeder>
+			{
+					new RoleSeeder(connection)
+			};
+
+		foreach (var seeder in seeders)
+			await seeder.SeedAsync();
 	}
 }

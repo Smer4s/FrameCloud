@@ -1,5 +1,11 @@
+using FrameCloud.Auth;
+using FrameCloud.Data;
 using FrameCloud.Extensions;
+using FrameCloud.Middleware;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Text;
 
 namespace FrameCloud;
 
@@ -7,37 +13,47 @@ public class Program
 {
 	public static async Task Main(string[] args)
 	{
-		Log.Logger = new LoggerConfiguration()
-			.MinimumLevel.Information()
-			.WriteTo.Console()
-			.CreateLogger();
+		Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
 
 		var builder = WebApplication.CreateBuilder(args);
-
 		builder.Host.UseSerilog();
 
+		var jwtSection = builder.Configuration.GetSection("Jwt");
+		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
+
 		builder.Services.AddControllersWithViews();
+		builder.Services.AddSingleton<IUserRepository, UserRepository>();
+		builder.Services.AddSingleton<ITokenService>(sp => new TokenService(
+				jwtSection["Issuer"]!, jwtSection["Audience"]!, key, int.Parse(jwtSection["ExpiresMinutes"]!)
+		));
+
+		builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+				.AddJwtBearer(options =>
+				{
+					options.TokenValidationParameters = new TokenValidationParameters
+					{
+						ValidateIssuer = true,
+						ValidateAudience = true,
+						ValidateLifetime = true,
+						ValidateIssuerSigningKey = true,
+						ValidIssuer = jwtSection["Issuer"],
+						ValidAudience = jwtSection["Audience"],
+						IssuerSigningKey = key
+					};
+				});
 
 		var app = builder.Build();
 
 		await app.InitializeDatabase();
 
-		if (!app.Environment.IsDevelopment())
-		{
-			app.UseExceptionHandler("/Home/Error");
-			app.UseHsts();
-		}
-
+		app.UseJwtCookieAuth();
 		app.UseHttpsRedirection();
 		app.UseStaticFiles();
-
 		app.UseRouting();
-
+		app.UseAuthentication();
 		app.UseAuthorization();
 
-		app.MapControllerRoute(
-			name: "default",
-			pattern: "{controller=Home}/{action=Index}/{id?}");
+		app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
 		app.Run();
 	}

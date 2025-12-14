@@ -1,18 +1,18 @@
-﻿@{
+﻿@model FrameCloud.Auth.RegisterRequest
+@{
 	ViewData["Title"] = "Sign Up";
 }
-
 <div class="row justify-content-center">
 	<div class="col-md-4">
 		<h2 class="text-center">Регистрация</h2>
 		<form asp-action="Register" method="post">
-			<div class="form-group mb-3">
-				<label for="login">Логин</label>
-				<input type="text" class="form-control" id="login" name="login" required />
+			<div class="mb-3">
+				<label class="form-label">Логин</label>
+				<input class="form-control" asp-for="Login" />
 			</div>
-			<div class="form-group mb-3">
-				<label for="password">Пароль</label>
-				<input type="password" class="form-control" id="password" name="password" required />
+			<div class="mb-3">
+				<label class="form-label">Пароль</label>
+				<input class="form-control" asp-for="Password" type="password" />
 			</div>
 			<button type="submit" class="btn btn-success w-100">Зарегистрироваться</button>
 		</form>
