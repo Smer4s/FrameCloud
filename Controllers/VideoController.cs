@@ -8,6 +8,7 @@ public class VideoController(
 	IVideoRepository videos,
 	IChannelRepository channels,
 	ICommentRepository comments,
+	IMarkRepository marks,
 	IWebHostEnvironment env) : Controller
 {
 	[HttpGet]
@@ -107,11 +108,20 @@ public class VideoController(
 
 		var videoComments = await comments.GetByVideoIdAsync(id);
 
+		Mark? userMark = null;
+		if (User.Identity?.IsAuthenticated ?? false)
+		{
+			var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+			userMark = await marks.GetByUserAndVideoAsync(userId, id);
+		}
+
 		ViewBag.OtherVideos = otherVideos;
 		ViewBag.Comments = videoComments;
+		ViewBag.UserMark = userMark;
 
 		return View(video);
 	}
+
 
 
 

@@ -220,3 +220,47 @@ CREATE TABLE IF NOT EXISTS "SearchHistory" (
 CREATE INDEX IF NOT EXISTS idx_user_login ON "User" ("Login");
 CREATE INDEX IF NOT EXISTS idx_channel_name ON "Channel" ("Name");
 CREATE INDEX IF NOT EXISTS idx_action_name_publicId ON "Action" ("Name", "PublicId");
+
+
+
+CREATE OR REPLACE FUNCTION update_rating() RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        UPDATE "Video"
+        SET "Rating" = (
+            SELECT SUM(CASE WHEN "IsLike" IS TRUE THEN 1.0 ELSE 0 END) / COUNT(*) * 5.0
+            FROM "Mark"
+            WHERE "VideoId" = OLD."VideoId"
+        )
+        WHERE "Id" = OLD."VideoId";
+    ELSE 
+        UPDATE "Video"
+        SET "Rating" = (
+            SELECT COALESCE(SUM(CASE WHEN "IsLike" IS TRUE THEN 1.0 ELSE 0 END) / COUNT(*) * 5.0, 0)
+            FROM "Mark"
+            WHERE "VideoId" = NEW."VideoId"
+        )
+        WHERE "Id" = NEW."VideoId";
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER update_rating_trigger
+AFTER INSERT OR UPDATE OR DELETE ON "Mark"
+FOR EACH ROW
+EXECUTE FUNCTION update_rating();
+
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'mark_unique'
+    ) THEN
+        ALTER TABLE "Mark"
+        ADD CONSTRAINT mark_unique UNIQUE ("VideoId", "UserId");
+    END IF;
+END$$;
+

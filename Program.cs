@@ -26,6 +26,7 @@ public class Program
 		builder.Services.AddSingleton<IUserRepository, UserRepository>();
 		builder.Services.AddSingleton<IVideoRepository, VideoRepository>();
 		builder.Services.AddSingleton<ICommentRepository, CommentRepository>();
+		builder.Services.AddSingleton<IMarkRepository, MarkRepository>();
 		builder.Services.AddSingleton<IChannelRepository, ChannelRepository>();
 		builder.Services.AddSingleton<ITokenService>(sp => new TokenService(
 				jwtSection["Issuer"]!, jwtSection["Audience"]!, key, int.Parse(jwtSection["ExpiresMinutes"]!)

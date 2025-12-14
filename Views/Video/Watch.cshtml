@@ -16,12 +16,24 @@
 
 		@if (User.Identity?.IsAuthenticated ?? false)
 		{
-			<form method="post" asp-controller="Comment" asp-action="Add">
-				<input type="hidden" name="videoId" value="@Model.Id" />
-				<textarea class="form-control mb-2" name="text" placeholder="Напишите комментарий..." required></textarea>
-				<button type="submit" class="btn btn-success">Отправить</button>
-			</form>
+			var userMark = ViewBag.UserMark as FrameCloud.Entities.Mark;
+
+			<div class="mb-3">
+				<form method="post" asp-controller="Mark" asp-action="Like" class="d-inline">
+					<input type="hidden" name="videoId" value="@Model.Id" />
+					<button type="submit" class="btn @(userMark?.IsLike == true ? "btn-success" : "btn-outline-success")">
+						👍 Лайк
+					</button>
+				</form>
+				<form method="post" asp-controller="Mark" asp-action="Dislike" class="d-inline">
+					<input type="hidden" name="videoId" value="@Model.Id" />
+					<button type="submit" class="btn @(userMark?.IsLike == false ? "btn-danger" : "btn-outline-danger")">
+						👎 Дизлайк
+					</button>
+				</form>
+			</div>
 		}
+
 		else
 		{
 			<p class="text-muted">Авторизуйтесь, чтобы оставлять комментарии.</p>
