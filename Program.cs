@@ -1,14 +1,26 @@
+using FrameCloud.Extensions;
+using Serilog;
+
 namespace FrameCloud;
 
 public class Program
 {
-	public static void Main(string[] args)
+	public static async Task Main(string[] args)
 	{
+		Log.Logger = new LoggerConfiguration()
+			.MinimumLevel.Information()
+			.WriteTo.Console()
+			.CreateLogger();
+
 		var builder = WebApplication.CreateBuilder(args);
+
+		builder.Host.UseSerilog();
 
 		builder.Services.AddControllersWithViews();
 
 		var app = builder.Build();
+
+		await app.InitializeDatabase();
 
 		if (!app.Environment.IsDevelopment())
 		{
