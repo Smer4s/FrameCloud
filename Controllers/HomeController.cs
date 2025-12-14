@@ -1,15 +1,13 @@
-using FrameCloud.Models;
+using FrameCloud.Data;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
-namespace FrameCloud.Controllers
+namespace FrameCloud.Controllers;
+
+public class HomeController(IVideoRepository videos) : Controller
 {
-	public class HomeController(ILogger<HomeController> logger) : Controller
+	public async Task<IActionResult> Index()
 	{
-		public IActionResult Index()
-		{
-			return View();
-		}
-
+		var allVideos = await videos.GetAllAsync();
+		return View(allVideos);
 	}
 }

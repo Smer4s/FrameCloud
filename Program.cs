@@ -3,6 +3,7 @@ using FrameCloud.Data;
 using FrameCloud.Extensions;
 using FrameCloud.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
@@ -23,6 +24,9 @@ public class Program
 
 		builder.Services.AddControllersWithViews();
 		builder.Services.AddSingleton<IUserRepository, UserRepository>();
+		builder.Services.AddSingleton<IVideoRepository, VideoRepository>();
+		builder.Services.AddSingleton<ICommentRepository, CommentRepository>();
+		builder.Services.AddSingleton<IChannelRepository, ChannelRepository>();
 		builder.Services.AddSingleton<ITokenService>(sp => new TokenService(
 				jwtSection["Issuer"]!, jwtSection["Audience"]!, key, int.Parse(jwtSection["ExpiresMinutes"]!)
 		));
@@ -49,6 +53,13 @@ public class Program
 		app.UseJwtCookieAuth();
 		app.UseHttpsRedirection();
 		app.UseStaticFiles();
+		app.UseStaticFiles(new StaticFileOptions
+		{
+			FileProvider = new PhysicalFileProvider(
+						Path.Combine(builder.Environment.ContentRootPath, "uploads")),
+			RequestPath = "/uploads"
+		});
+
 		app.UseRouting();
 		app.UseAuthentication();
 		app.UseAuthorization();

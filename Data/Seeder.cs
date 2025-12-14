@@ -1,6 +1,4 @@
-﻿using Dapper;
-using Npgsql;
-using Serilog;
+﻿using Npgsql;
 
 namespace FrameCloud.Data;
 

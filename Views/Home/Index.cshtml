@@ -1,8 +1,27 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<FrameCloud.Entities.Video>
+@{
+	ViewData["Title"] = "Главная";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+	<h1 class="display-4">FrameCloud</h1>
+	<p>Добро пожаловать! Здесь собраны все видео.</p>
+</div>
+
+<div class="row mt-4">
+	@foreach (var video in Model)
+	{
+		<div class="col-md-4 mb-4">
+			<div class="card">
+				<video src="@video.Url" class="card-img-top" preload="metadata"></video>
+				<div class="card-body">
+					<h5 class="card-title">@video.Name</h5>
+					<p class="card-text">@video.Description</p>
+					<a asp-controller="Video" asp-action="Watch" asp-route-id="@video.Id" class="btn btn-primary w-100">
+						Смотреть
+					</a>
+				</div>
+			</div>
+		</div>
+	}
 </div>

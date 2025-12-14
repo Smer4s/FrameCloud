@@ -6,4 +6,8 @@ public class Comment : Entity
 	public int UserId { get; set; }
 	public required string Text { get; set; }
 	public DateTime Date { get; set; }
+
+
+	public string? UserLogin { get; set; }
 }
+

@@ -1,0 +1,1 @@
+﻿global using Channel = FrameCloud.Entities.Channel;

@@ -1,0 +1,32 @@
+﻿@{
+	ViewData["Title"] = "Загрузка видео";
+}
+
+<div class="row justify-content-center">
+	<div class="col-md-6">
+		<h2 class="text-center">Загрузить видео</h2>
+		<form asp-action="Upload" method="post" enctype="multipart/form-data">
+			<div class="mb-3">
+				<label class="form-label">Название</label>
+				<input class="form-control" name="name" required />
+			</div>
+
+			<div class="mb-3">
+				<label class="form-label">Описание</label>
+				<textarea class="form-control" name="description" required></textarea>
+			</div>
+
+			<div class="mb-3">
+				<label class="form-label">Файл видео</label>
+				<input type="file" class="form-control" name="file" accept="video/*" required />
+			</div>
+
+			<div class="form-check mb-3">
+				<input class="form-check-input" type="checkbox" name="isPublic" />
+				<label class="form-check-label">Публичное видео</label>
+			</div>
+
+			<button type="submit" class="btn btn-success w-100">Загрузить</button>
+		</form>
+	</div>
+</div>
