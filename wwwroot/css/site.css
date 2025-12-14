@@ -20,3 +20,10 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.video-preview {
+    width: 380px;
+    height: 210px;
+    object-fit: cover;
+    background-color: #000;
+}

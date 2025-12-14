@@ -10,4 +10,8 @@ public class Video : Entity
 	public bool IsPublic { get; set; }
 	public long ViewersCount { get; set; }
 	public float Rating { get; set; }
+
+	// Дополнительное поле для отображения
+	public string? ChannelName { get; set; }
 }
+

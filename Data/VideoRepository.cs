@@ -55,9 +55,16 @@ public class VideoRepository : IVideoRepository
 	public async Task<IEnumerable<Video>> GetAllAsync()
 	{
 		await using var con = new NpgsqlConnection(_cs);
-		var sql = @"SELECT * FROM ""Video"" ORDER BY ""Date"" DESC;";
+		var sql = @"
+        SELECT v.""Id"", v.""ChannelId"", v.""Name"", v.""Description"", v.""Date"", 
+               v.""Url"", v.""IsPublic"", v.""ViewersCount"", v.""Rating"",
+               c.""Name"" AS ChannelName
+        FROM ""Video"" v
+        JOIN ""Channel"" c ON v.""ChannelId"" = c.""Id""
+        ORDER BY v.""Date"" DESC;";
 		return await con.QueryAsync<Video>(sql);
 	}
+
 
 
 	public async Task<bool> DeleteAsync(int id)

@@ -8,7 +8,7 @@
 <div class="row">
 	<div class="col-md-8">
 		<h2>@Model.Name</h2>
-		<video src="@Model.Url" controls class="w-100 mb-3"></video>
+		<video src="@Model.Url" controls class="w-100 mb-3 "></video>
 		<p>@Model.Description</p>
 		<p>Просмотры: @Model.ViewersCount | Рейтинг: @Model.Rating</p>
 
@@ -50,7 +50,7 @@
 		@foreach (var v in otherVideos)
 		{
 			<div class="card mb-3">
-				<video src="@v.Url" class="card-img-top" preload="metadata"></video>
+				<video src="@v.Url" class="card-img-top video-preview" preload="metadata"></video>
 				<div class="card-body">
 					<h6 class="card-title">@v.Name</h6>
 					<a asp-controller="Video" asp-action="Watch" asp-route-id="@v.Id" class="btn btn-sm btn-primary">
