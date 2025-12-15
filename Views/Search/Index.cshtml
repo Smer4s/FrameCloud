@@ -1,8 +1,79 @@
 ﻿@{
 	ViewData["Title"] = "Search";
+	var videos = ViewBag.Videos as IEnumerable<FrameCloud.Entities.Video>;
+	var channels = ViewBag.Channels as IEnumerable<FrameCloud.Entities.Channel>;
+	var query = ViewBag.Query as string;
+	var type = ViewBag.Type as string;
 }
 
-<div class="text-center">
+<div class="text-center mb-4">
 	<h1 class="display-4">Search Page</h1>
-	<p>Здесь будет поиск по видео и каналам.</p>
+	<p>Поиск по видео и каналам</p>
+
+	<form asp-action="Index" method="post" class="d-flex justify-content-center mt-3">
+		<input type="text" name="query" value="@query" class="form-control w-50" placeholder="Введите название..." required />
+		<select name="type" class="form-select w-auto ms-2">
+			<option value="video" selected="@(type == "video")">Видео</option>
+			<option value="channel" selected="@(type == "channel")">Каналы</option>
+		</select>
+		<button type="submit" class="btn btn-primary ms-2">Искать</button>
+	</form>
 </div>
+
+@if (!string.IsNullOrEmpty(query))
+{
+	<h3>Результаты поиска для "@query"</h3>
+
+	@if (type == "video")
+	{
+		<div class="mt-4">
+			<h4>Видео</h4>
+			@if (videos == null || !videos.Any())
+			{
+				<p class="text-muted">Видео не найдено.</p>
+			}
+			else
+			{
+				<ul class="list-group">
+					@foreach (var v in videos)
+					{
+						<li class="list-group-item d-flex justify-content-between align-items-center">
+							<div>
+								<strong>@v.Name</strong><br />
+								<small>@v.Description</small>
+							</div>
+							<a asp-controller="Video" asp-action="Watch" asp-route-id="@v.Id"
+								 class="btn btn-sm btn-primary">Смотреть</a>
+						</li>
+					}
+				</ul>
+			}
+		</div>
+	}
+	else if (type == "channel")
+	{
+		<div class="mt-4">
+			<h4>Каналы</h4>
+			@if (channels == null || !channels.Any())
+			{
+				<p class="text-muted">Каналы не найдены.</p>
+			}
+			else
+			{
+				<ul class="list-group">
+					@foreach (var c in channels)
+					{
+						<li class="list-group-item d-flex justify-content-between align-items-center">
+							<div>
+								<strong>@c.Name</strong><br />
+								<small>@c.Description</small>
+							</div>
+							<a asp-controller="Channel" asp-action="Index" asp-route-id="@c.Id"
+								 class="btn btn-sm btn-success">Перейти</a>
+						</li>
+					}
+				</ul>
+			}
+		</div>
+	}
+}

@@ -9,6 +9,7 @@ public interface IChannelRepository
 	Task<int?> CreateAsync(Channel channel);
 	Task<int> GetVideoCountAsync(int channelId);
 	Task<Channel?> GetByIdAsync(int id);
+	Task<IEnumerable<Channel>> SearchByNameAsync(string query);
 }
 
 public class ChannelRepository(IConfiguration cfg) : IChannelRepository
@@ -52,5 +53,14 @@ public class ChannelRepository(IConfiguration cfg) : IChannelRepository
         WHERE ""Id"" = @Id;";
 
 		return await con.QuerySingleOrDefaultAsync<Channel>(sql, new { Id = id });
+	}
+
+	public async Task<IEnumerable<Channel>> SearchByNameAsync(string query)
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"SELECT ""Id"", ""Name"", ""Description"", ""SubscribersCount""
+                    FROM ""Channel""
+                    WHERE LOWER(""Name"") LIKE LOWER(@q);";
+		return await con.QueryAsync<Channel>(sql, new { q = "%" + query + "%" });
 	}
 }

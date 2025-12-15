@@ -13,6 +13,7 @@ public interface IVideoRepository
 	Task<IEnumerable<Video>> GetAllAsync();
 	Task<IEnumerable<Video>> GetByChannelAsync(int channelId, int? currentUserId = null);
 	Task<Video?> GetVideoForWatchAsync(int id, int? userId);
+	Task<IEnumerable<Video>> SearchByNameAsync(string query);
 }
 
 public class VideoRepository : IVideoRepository
@@ -112,5 +113,14 @@ public class VideoRepository : IVideoRepository
 		var sql = @"DELETE FROM ""Video"" WHERE ""Id""=@Id;";
 		var rows = await con.ExecuteAsync(sql, new { Id = id });
 		return rows > 0;
+	}
+
+	public async Task<IEnumerable<Video>> SearchByNameAsync(string query)
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"SELECT ""Id"", ""Name"", ""Description"", ""Url"", ""Rating"", ""ViewersCount""
+                    FROM ""Video""
+                    WHERE LOWER(""Name"") LIKE LOWER(@q);";
+		return await con.QueryAsync<Video>(sql, new { q = "%" + query + "%" });
 	}
 }
