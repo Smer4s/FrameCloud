@@ -264,3 +264,64 @@ BEGIN
     END IF;
 END$$;
 
+
+
+CREATE OR REPLACE FUNCTION update_subscribers_count() RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        UPDATE "Channel"
+        SET "SubscribersCount" = (
+            SELECT COUNT(*) 
+            FROM "Subscription"
+            WHERE "ChannelId" = OLD."ChannelId"
+        )
+        WHERE "Id" = OLD."ChannelId";
+    ELSE
+        UPDATE "Channel"
+        SET "SubscribersCount" = (
+            SELECT COUNT(*) 
+            FROM "Subscription"
+            WHERE "ChannelId" = NEW."ChannelId"
+        )
+        WHERE "Id" = NEW."ChannelId";
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER update_subscribers_trigger
+AFTER INSERT OR UPDATE OR DELETE ON "Subscription"
+FOR EACH ROW
+EXECUTE FUNCTION update_subscribers_count();
+
+
+CREATE OR REPLACE PROCEDURE view_video(video_id INTEGER)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE "Video"
+    SET "ViewersCount" = "ViewersCount" + 1
+    WHERE "Id" = video_id;
+END;
+$$;
+
+
+CREATE OR REPLACE FUNCTION notify_on_new_video() RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO "Notification"("UserId", "Message", "IsRead", "CreatedAt")
+    SELECT s."UserId",
+           'Новое видео на канале: ' || NEW."Name",
+           FALSE,
+           NOW()
+    FROM "Subscription" s
+    WHERE s."ChannelId" = NEW."ChannelId";
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER video_insert_notify_trigger
+AFTER INSERT ON "Video"
+FOR EACH ROW
+EXECUTE FUNCTION notify_on_new_video();

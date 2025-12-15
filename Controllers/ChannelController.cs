@@ -1,46 +1,48 @@
 ﻿using FrameCloud.Data;
 using FrameCloud.Entities;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FrameCloud.Controllers;
 
-public class ChannelController(IChannelRepository channels, IVideoRepository videos) : Controller
+public class ChannelController(
+	IChannelRepository channels,
+	IVideoRepository videos,
+	ISubscriptionRepository subs) : Controller
 {
 	[HttpGet]
 	public async Task<IActionResult> Index(int? id = default)
 	{
-		IEnumerable<Video> videoList;
 		Channel? channel;
-
-		// Если id не передан → открываем свой канал
-		if (id == null)
-		{
-			var ownerId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-			channel = await channels.GetByOwnerIdAsync(ownerId);
-			if (channel is null) return View("CreatePrompt");
-
-			// Владелец видит все свои видео
-			videoList = await videos.GetByChannelAsync(channel.Id, ownerId);
-			ViewBag.Videos = videoList.ToList();
-
-			return View(channel);
-		}
-
-		// Если id передан → открываем чужой канал
-		channel = await channels.GetByIdAsync(id.Value);
-		if (channel is null) return NotFound();
+		IEnumerable<Video> videoList;
 
 		int? currentUserId = null;
 		if (User.Identity?.IsAuthenticated ?? false)
 			currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
 
-		// Если владелец = текущий пользователь → все видео, иначе только публичные
+		if (id == null)
+		{
+			var ownerId = currentUserId!.Value;
+			channel = await channels.GetByOwnerIdAsync(ownerId);
+			if (channel is null) return View("CreatePrompt");
+
+			videoList = await videos.GetByChannelAsync(channel.Id, ownerId);
+			ViewBag.Videos = videoList.ToList();
+			ViewBag.IsSubscribed = false;
+			return View(channel);
+		}
+
+		channel = await channels.GetByIdAsync(id.Value);
+		if (channel is null) return NotFound();
+
 		videoList = await videos.GetByChannelAsync(channel.Id, currentUserId);
 		ViewBag.Videos = videoList.ToList();
 
+		if (currentUserId.HasValue)
+			ViewBag.IsSubscribed = await subs.ExistsAsync(channel.Id, currentUserId.Value);
+
 		return View(channel);
 	}
+
 
 
 	[HttpGet]

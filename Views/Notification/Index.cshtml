@@ -1,8 +1,42 @@
-﻿@{
+﻿@model IEnumerable<FrameCloud.Entities.Notification>
+@{
 	ViewData["Title"] = "Notifications";
 }
 
 <div class="text-center">
 	<h1 class="display-4">Notifications Page</h1>
-	<p>Здесь будут уведомления.</p>
+</div>
+
+<div class="mt-4">
+	@if (Model == null || !Model.Any())
+	{
+		<p class="text-muted">Уведомлений пока нет.</p>
+	}
+	else
+	{
+		<ul class="list-group">
+			@foreach (var n in Model)
+			{
+				<li class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>@n.Message</strong>
+						<br />
+						<small class="text-muted">@n.CreatedAt.ToString("g")</small>
+					</div>
+
+					@if (!n.IsRead)
+					{
+						<form asp-controller="Notification" asp-action="MarkAsRead" method="post" class="ms-3">
+							<input type="hidden" name="id" value="@n.Id" />
+							<button type="submit" class="btn btn-success btn-sm">✔ ОК</button>
+						</form>
+					}
+					else
+					{
+						<span class="badge bg-secondary">Прочитано</span>
+					}
+				</li>
+			}
+		</ul>
+	}
 </div>

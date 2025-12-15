@@ -27,6 +27,8 @@ public class Program
 		builder.Services.AddSingleton<IVideoRepository, VideoRepository>();
 		builder.Services.AddSingleton<ICommentRepository, CommentRepository>();
 		builder.Services.AddSingleton<IMarkRepository, MarkRepository>();
+		builder.Services.AddSingleton<ISubscriptionRepository, SubscriptionRepository>();
+		builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 		builder.Services.AddSingleton<IChannelRepository, ChannelRepository>();
 		builder.Services.AddSingleton<ITokenService>(sp => new TokenService(
 				jwtSection["Issuer"]!, jwtSection["Audience"]!, key, int.Parse(jwtSection["ExpiresMinutes"]!)
@@ -50,6 +52,14 @@ public class Program
 		var app = builder.Build();
 
 		await app.InitializeDatabase();
+
+		app.Use(async (context, next) =>
+		{
+			context.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpMaxRequestBodySizeFeature>()!
+					.MaxRequestBodySize = 1000_000_000_000;
+			await next();
+		});
+
 
 		app.UseJwtCookieAuth();
 		app.UseHttpsRedirection();

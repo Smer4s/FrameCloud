@@ -100,7 +100,7 @@ public class VideoController(
 	[HttpGet]
 	public async Task<IActionResult> Watch(int id)
 	{
-		var video = await videos.GetByIdAsync(id);
+		var video = await videos.GetVideoForWatchAsync(id);
 		if (video is null) return NotFound();
 
 		var allVideos = await videos.GetAllAsync();
@@ -121,6 +121,7 @@ public class VideoController(
 
 		return View(video);
 	}
+
 
 
 
