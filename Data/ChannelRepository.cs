@@ -8,6 +8,7 @@ public interface IChannelRepository
 	Task<Channel?> GetByOwnerIdAsync(int ownerId);
 	Task<int?> CreateAsync(Channel channel);
 	Task<int> GetVideoCountAsync(int channelId);
+	Task<Channel?> GetByIdAsync(int id);
 }
 
 public class ChannelRepository(IConfiguration cfg) : IChannelRepository
@@ -35,5 +36,21 @@ public class ChannelRepository(IConfiguration cfg) : IChannelRepository
 		await using var con = new NpgsqlConnection(_cs);
 		var sql = @"SELECT COUNT(*) FROM ""Video"" WHERE ""ChannelId"" = @ChannelId;";
 		return await con.ExecuteScalarAsync<int>(sql, new { ChannelId = channelId });
+	}
+
+	public async Task<Channel?> GetByIdAsync(int id)
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"
+        SELECT
+            ""Id"",
+            ""OwnerId"",
+            ""Name"",
+            ""Description"",
+            ""SubscribersCount""
+        FROM ""Channel""
+        WHERE ""Id"" = @Id;";
+
+		return await con.QuerySingleOrDefaultAsync<Channel>(sql, new { Id = id });
 	}
 }

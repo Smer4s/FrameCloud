@@ -5,20 +5,43 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FrameCloud.Controllers;
 
-[Authorize]
 public class ChannelController(IChannelRepository channels, IVideoRepository videos) : Controller
 {
-	public async Task<IActionResult> Index()
+	[HttpGet]
+	public async Task<IActionResult> Index(int? id = default)
 	{
-		var ownerId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-		var channel = await channels.GetByOwnerIdAsync(ownerId);
-		if (channel is null) return View("CreatePrompt");
+		IEnumerable<Video> videoList;
+		Channel? channel;
 
-		var videoList = await videos.GetByChannelAsync(channel.Id);
+		// Если id не передан → открываем свой канал
+		if (id == null)
+		{
+			var ownerId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+			channel = await channels.GetByOwnerIdAsync(ownerId);
+			if (channel is null) return View("CreatePrompt");
+
+			// Владелец видит все свои видео
+			videoList = await videos.GetByChannelAsync(channel.Id, ownerId);
+			ViewBag.Videos = videoList.ToList();
+
+			return View(channel);
+		}
+
+		// Если id передан → открываем чужой канал
+		channel = await channels.GetByIdAsync(id.Value);
+		if (channel is null) return NotFound();
+
+		int? currentUserId = null;
+		if (User.Identity?.IsAuthenticated ?? false)
+			currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+
+		// Если владелец = текущий пользователь → все видео, иначе только публичные
+		videoList = await videos.GetByChannelAsync(channel.Id, currentUserId);
 		ViewBag.Videos = videoList.ToList();
 
 		return View(channel);
 	}
+
 
 	[HttpGet]
 	public IActionResult Create() => View();

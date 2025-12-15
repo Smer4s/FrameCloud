@@ -7,11 +7,11 @@ namespace FrameCloud.Data;
 public interface IVideoRepository
 {
 	Task<int?> CreateAsync(Video video);
-	Task<IEnumerable<Video>> GetByChannelAsync(int channelId);
 	Task<Video?> GetByIdAsync(int id);
 	Task<bool> UpdateAsync(Video video);
 	Task<bool> DeleteAsync(int id);
 	Task<IEnumerable<Video>> GetAllAsync();
+	Task<IEnumerable<Video>> GetByChannelAsync(int channelId, int? currentUserId = null);
 }
 
 public class VideoRepository : IVideoRepository
@@ -28,9 +28,10 @@ public class VideoRepository : IVideoRepository
 		return await con.ExecuteScalarAsync<int?>(sql, video);
 	}
 
-	public async Task<IEnumerable<Video>> GetByChannelAsync(int channelId)
+	public async Task<IEnumerable<Video>> GetByChannelAsync(int channelId, int? currentUserId = null)
 	{
 		await using var con = new NpgsqlConnection(_cs);
+
 		var sql = @"
         SELECT v.""Id"", v.""ChannelId"", v.""Name"", v.""Description"", v.""Date"",
                v.""Url"", v.""IsPublic"", v.""ViewersCount"", v.""Rating"",
@@ -38,9 +39,12 @@ public class VideoRepository : IVideoRepository
         FROM ""Video"" v
         JOIN ""Channel"" c ON v.""ChannelId"" = c.""Id""
         WHERE v.""ChannelId"" = @ChannelId
+          AND (@CurrentUserId = c.""OwnerId"" OR v.""IsPublic"" = TRUE)
         ORDER BY v.""Date"" DESC;";
-		return await con.QueryAsync<Video>(sql, new { ChannelId = channelId });
+
+		return await con.QueryAsync<Video>(sql, new { ChannelId = channelId, CurrentUserId = currentUserId });
 	}
+
 
 
 	public async Task<Video?> GetByIdAsync(int id)

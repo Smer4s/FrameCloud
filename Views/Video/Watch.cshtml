@@ -12,6 +12,13 @@
 		<p>@Model.Description</p>
 		<p>Просмотры: @Model.ViewersCount | Рейтинг: @Model.Rating</p>
 
+		<div class="mb-3">
+			<a asp-controller="Channel" asp-action="Index" asp-route-id="@Model.ChannelId"
+				 class="btn btn-info">
+				Перейти на канал: @Model.ChannelName
+			</a>
+		</div>
+
 		<h4 class="mt-4">Комментарии</h4>
 
 		@if (User.Identity?.IsAuthenticated ?? false)
