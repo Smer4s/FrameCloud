@@ -30,6 +30,14 @@ public class AdminController(IUserRepository users) : Controller
 		return RedirectToAction("Index");
 	}
 
+	[HttpPost]
+	public async Task<IActionResult> Unban(int userId)
+	{
+		await users.UnbanUserAsync(userId);
+		return RedirectToAction("Index");
+	}
+
+
 	[HttpGet]
 	public async Task<IActionResult> Logs(int userId)
 	{

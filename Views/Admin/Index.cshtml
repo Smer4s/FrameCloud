@@ -1,11 +1,15 @@
 ﻿@using FrameCloud.Data
 @model IEnumerable<UserView>
+@{
+	ViewData["Title"] = "Админ";
+}
 
 <table class="table table-striped">
 	<thead>
 		<tr>
 			<th>Логин</th>
 			<th>Есть канал</th>
+			<th>Статус</th>
 			<th>Действия</th>
 		</tr>
 	</thead>
@@ -15,14 +19,27 @@
 			<tr>
 				<td>@user.Login</td>
 				<td>@(user.HasChannel ? "Да" : "Нет")</td>
+				<td>@(user.IsBanned ? "Забанен" : "Активен")</td>
 				<td>
 					@if (user.HasChannel)
 					{
 						<a asp-controller="Channel" asp-action="Index" asp-route-id="@user.Id"
 							 class="btn btn-sm btn-success">Перейти на канал</a>
 					}
-					<a asp-action="Ban" asp-route-userId="@user.Id"
-						 class="btn btn-sm btn-danger">Забанить</a>
+
+					@if (user.IsBanned)
+					{
+						<form asp-action="Unban" method="post" class="d-inline">
+							<input type="hidden" name="userId" value="@user.Id" />
+							<button type="submit" class="btn btn-sm btn-warning">Разбанить</button>
+						</form>
+					}
+					else
+					{
+						<a asp-action="Ban" asp-route-userId="@user.Id"
+							 class="btn btn-sm btn-danger">Забанить</a>
+					}
+
 					<a asp-action="Logs" asp-route-userId="@user.Id"
 						 class="btn btn-sm btn-secondary">Посмотреть логи</a>
 				</td>

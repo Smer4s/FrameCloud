@@ -8,9 +8,11 @@ public interface IUserRepository
 {
 	Task BanUserAsync(int userId, string reason, DateTime? expiresAt = null);
 	Task<int?> CreateUserAsync(int roleId, string login, string passwordHash);
+	Task<Ban?> GetActiveBanAsync(int userId);
 	Task<IEnumerable<UserView>> GetAllAsync();
 	Task<User?> GetByLoginAsync(string login);
 	Task<IEnumerable<LogView>> GetLogsByUserAsync(int userId);
+	Task UnbanUserAsync(int userId);
 }
 
 public class UserRepository(IConfiguration cfg) : IUserRepository
@@ -49,8 +51,10 @@ public class UserRepository(IConfiguration cfg) : IUserRepository
         SELECT u.""Id"", u.""Login"",
                CASE WHEN EXISTS (
                    SELECT 1 FROM ""Channel"" c WHERE c.""OwnerId"" = u.""Id""
-               )
-               THEN TRUE ELSE FALSE END AS HasChannel
+               ) THEN TRUE ELSE FALSE END AS HasChannel,
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM ""Ban"" b WHERE b.""UserId"" = u.""Id""
+               ) THEN TRUE ELSE FALSE END AS IsBanned
         FROM ""User"" u
         WHERE u.""Login"" <> 'admin'
           AND u.""RoleId"" <> 2;";
@@ -79,7 +83,28 @@ public class UserRepository(IConfiguration cfg) : IUserRepository
                     VALUES (@UserId, @Reason, NOW(), @ExpiresAt);";
 		await con.ExecuteAsync(sql, new { UserId = userId, Reason = reason, ExpiresAt = expiresAt });
 	}
+
+	public async Task UnbanUserAsync(int userId)
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"DELETE FROM ""Ban"" WHERE ""UserId"" = @UserId;";
+		await con.ExecuteAsync(sql, new { UserId = userId });
+	}
+
+	public async Task<Ban?> GetActiveBanAsync(int userId)
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"
+        SELECT ""UserId"", ""Reason"", ""BannedAt"", ""ExpiresAt""
+        FROM ""Ban""
+        WHERE ""UserId"" = @UserId
+          AND (""ExpiresAt"" IS NULL OR ""ExpiresAt"" > NOW())
+        LIMIT 1;";
+		return await con.QueryFirstOrDefaultAsync<Ban>(sql, new { UserId = userId });
+	}
+
 }
+
 
 
 public class UserView
@@ -87,4 +112,5 @@ public class UserView
 	public int Id { get; set; }
 	public string Login { get; set; } = string.Empty;
 	public bool HasChannel { get; set; }
+	public bool IsBanned { get; set; }
 }

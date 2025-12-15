@@ -26,6 +26,13 @@ public class AccountController(IUserRepository users, ITokenService tokens) : Co
 			return View(request);
 		}
 
+		var ban = await users.GetActiveBanAsync(user.Id);
+		if (ban is not null)
+		{
+			ModelState.AddModelError(string.Empty, $"Вы забанены: {ban.Reason}");
+			return View(request);
+		}
+
 		var token = tokens.CreateToken(user.Id, user.RoleId, user.Login);
 
 		Response.Cookies.Append("AuthToken", token, new CookieOptions
@@ -38,6 +45,7 @@ public class AccountController(IUserRepository users, ITokenService tokens) : Co
 
 		return RedirectToAction("Index", "Home");
 	}
+
 
 
 	[HttpGet]
