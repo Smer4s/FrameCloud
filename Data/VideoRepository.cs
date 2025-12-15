@@ -31,16 +31,38 @@ public class VideoRepository : IVideoRepository
 	public async Task<IEnumerable<Video>> GetByChannelAsync(int channelId)
 	{
 		await using var con = new NpgsqlConnection(_cs);
-		var sql = @"SELECT * FROM ""Video"" WHERE ""ChannelId"" = @ChannelId;";
+		var sql = @"
+        SELECT v.""Id"", v.""ChannelId"", v.""Name"", v.""Description"", v.""Date"",
+               v.""Url"", v.""IsPublic"", v.""ViewersCount"", v.""Rating"",
+               c.""Name"" AS ChannelName
+        FROM ""Video"" v
+        JOIN ""Channel"" c ON v.""ChannelId"" = c.""Id""
+        WHERE v.""ChannelId"" = @ChannelId
+        ORDER BY v.""Date"" DESC;";
 		return await con.QueryAsync<Video>(sql, new { ChannelId = channelId });
 	}
+
 
 	public async Task<Video?> GetByIdAsync(int id)
 	{
 		await using var con = new NpgsqlConnection(_cs);
-		var sql = @"SELECT * FROM ""Video"" WHERE ""Id"" = @Id;";
+		var sql = @"
+        SELECT 
+            ""Id"",
+            ""ChannelId"",
+            ""Name"",
+            ""Description"",
+            ""Date"",
+            ""Url"",
+            ""IsPublic"",
+            ""ViewersCount"",
+            ""Rating""
+        FROM ""Video""
+        WHERE ""Id"" = @Id;";
+
 		return await con.QuerySingleOrDefaultAsync<Video>(sql, new { Id = id });
 	}
+
 
 	public async Task<bool> UpdateAsync(Video video)
 	{
@@ -56,14 +78,16 @@ public class VideoRepository : IVideoRepository
 	{
 		await using var con = new NpgsqlConnection(_cs);
 		var sql = @"
-        SELECT v.""Id"", v.""ChannelId"", v.""Name"", v.""Description"", v.""Date"", 
+        SELECT v.""Id"", v.""ChannelId"", v.""Name"", v.""Description"", v.""Date"",
                v.""Url"", v.""IsPublic"", v.""ViewersCount"", v.""Rating"",
                c.""Name"" AS ChannelName
         FROM ""Video"" v
         JOIN ""Channel"" c ON v.""ChannelId"" = c.""Id""
+        WHERE v.""IsPublic"" = TRUE
         ORDER BY v.""Date"" DESC;";
 		return await con.QueryAsync<Video>(sql);
 	}
+
 
 
 
