@@ -296,15 +296,27 @@ FOR EACH ROW
 EXECUTE FUNCTION update_subscribers_count();
 
 
-CREATE OR REPLACE PROCEDURE view_video(video_id INTEGER)
+CREATE OR REPLACE PROCEDURE view_video(video_id INTEGER, user_id INTEGER)
 LANGUAGE plpgsql
 AS $$
 BEGIN
     UPDATE "Video"
     SET "ViewersCount" = "ViewersCount" + 1
     WHERE "Id" = video_id;
+    IF EXISTS (
+        SELECT 1 FROM "WatchHistory"
+        WHERE "UserId" = user_id AND "VideoId" = video_id
+    ) THEN
+        UPDATE "WatchHistory"
+        SET "WatchedAt" = NOW()
+        WHERE "UserId" = user_id AND "VideoId" = video_id;
+    ELSE
+        INSERT INTO "WatchHistory"("UserId", "VideoId", "WatchedAt")
+        VALUES (user_id, video_id, NOW());
+    END IF;
 END;
 $$;
+
 
 
 CREATE OR REPLACE FUNCTION notify_on_new_video() RETURNS TRIGGER AS $$

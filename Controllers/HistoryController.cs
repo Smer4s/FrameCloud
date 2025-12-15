@@ -1,12 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace FrameCloud.Controllers
+namespace FrameCloud.Controllers;
+
+[Authorize]
+public class HistoryController(IWatchHistoryRepository history) : Controller
 {
-	public class HistoryController : Controller
+	[HttpGet]
+	public async Task<IActionResult> Index()
 	{
-		public IActionResult Index()
-		{
-			return View();
-		}
+		var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+		var list = await history.GetByUserAsync(userId);
+		return View(list);
 	}
 }

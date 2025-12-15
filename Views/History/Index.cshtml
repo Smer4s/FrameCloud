@@ -1,8 +1,32 @@
-﻿@{
+﻿@model IEnumerable<FrameCloud.Entities.WatchHistory>
+@{
 	ViewData["Title"] = "History";
 }
 
 <div class="text-center">
 	<h1 class="display-4">History Page</h1>
-	<p>Здесь будет история просмотров.</p>
+</div>
+
+<div class="mt-4">
+	@if (Model == null || !Model.Any())
+	{
+		<p class="text-muted">История просмотров пуста.</p>
+	}
+	else
+	{
+		<ul class="list-group">
+			@foreach (var item in Model)
+			{
+				<li class="list-group-item d-flex justify-content-between align-items-center">
+					<div>
+						<strong>@item.VideoName</strong>
+						<br />
+						<small class="text-muted">Просмотрено: @item.WatchedAt.ToString("g")</small>
+					</div>
+					<a asp-controller="Video" asp-action="Watch" asp-route-id="@item.VideoId"
+						 class="btn btn-primary btn-sm">Смотреть снова</a>
+				</li>
+			}
+		</ul>
+	}
 </div>

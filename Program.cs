@@ -30,6 +30,7 @@ public class Program
 		builder.Services.AddSingleton<ISubscriptionRepository, SubscriptionRepository>();
 		builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 		builder.Services.AddSingleton<IChannelRepository, ChannelRepository>();
+		builder.Services.AddSingleton<IWatchHistoryRepository, WatchHistoryRepository>();
 		builder.Services.AddSingleton<ITokenService>(sp => new TokenService(
 				jwtSection["Issuer"]!, jwtSection["Audience"]!, key, int.Parse(jwtSection["ExpiresMinutes"]!)
 		));

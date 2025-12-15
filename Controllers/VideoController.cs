@@ -100,20 +100,21 @@ public class VideoController(
 	[HttpGet]
 	public async Task<IActionResult> Watch(int id)
 	{
-		var video = await videos.GetVideoForWatchAsync(id);
+		Mark? userMark = null;
+		int userId = -1;
+		if (User.Identity?.IsAuthenticated ?? false)
+		{
+			userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+			userMark = await marks.GetByUserAndVideoAsync(userId, id);
+		}
+
+		var video = await videos.GetVideoForWatchAsync(id, userId);
 		if (video is null) return NotFound();
 
 		var allVideos = await videos.GetAllAsync();
 		var otherVideos = allVideos.Where(v => v.Id != id).ToList();
 
 		var videoComments = await comments.GetByVideoIdAsync(id);
-
-		Mark? userMark = null;
-		if (User.Identity?.IsAuthenticated ?? false)
-		{
-			var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
-			userMark = await marks.GetByUserAndVideoAsync(userId, id);
-		}
 
 		ViewBag.OtherVideos = otherVideos;
 		ViewBag.Comments = videoComments;
