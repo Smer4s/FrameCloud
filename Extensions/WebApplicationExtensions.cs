@@ -22,7 +22,8 @@ public static class WebApplicationExtensions
 		var seeders = new List<Seeder>
 			{
 					new RoleSeeder(connection),
-					new UserSeeder(connection)
+					new UserSeeder(connection),
+					new ActionSeeder(connection)
 			};
 
 		foreach (var seeder in seeders)

@@ -1,0 +1,26 @@
+﻿@model FrameCloud.Models.BanViewModel
+
+@{
+	ViewData["Title"] = "Ban User";
+}
+
+<div class="text-center mb-4">
+	<h1 class="display-4">Бан пользователя #@Model.UserId</h1>
+</div>
+
+<form asp-action="Ban" method="post" class="w-50 mx-auto">
+	<input type="hidden" asp-for="UserId" />
+
+	<div class="mb-3">
+		<label asp-for="Reason" class="form-label"></label>
+		<input asp-for="Reason" class="form-control" />
+		<span asp-validation-for="Reason" class="text-danger"></span>
+	</div>
+
+	<button type="submit" class="btn btn-danger">Забанить</button>
+	<a asp-action="Index" class="btn btn-secondary">Отмена</a>
+</form>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}

@@ -6,8 +6,11 @@ namespace FrameCloud.Data;
 
 public interface IUserRepository
 {
+	Task BanUserAsync(int userId, string reason, DateTime? expiresAt = null);
 	Task<int?> CreateUserAsync(int roleId, string login, string passwordHash);
+	Task<IEnumerable<UserView>> GetAllAsync();
 	Task<User?> GetByLoginAsync(string login);
+	Task<IEnumerable<LogView>> GetLogsByUserAsync(int userId);
 }
 
 public class UserRepository(IConfiguration cfg) : IUserRepository
@@ -38,4 +41,50 @@ public class UserRepository(IConfiguration cfg) : IUserRepository
 			Login = login
 		});
 	}
+
+	public async Task<IEnumerable<UserView>> GetAllAsync()
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"
+        SELECT u.""Id"", u.""Login"",
+               CASE WHEN EXISTS (
+                   SELECT 1 FROM ""Channel"" c WHERE c.""OwnerId"" = u.""Id""
+               )
+               THEN TRUE ELSE FALSE END AS HasChannel
+        FROM ""User"" u
+        WHERE u.""Login"" <> 'admin'
+          AND u.""RoleId"" <> 2;";
+		return await con.QueryAsync<UserView>(sql);
+	}
+
+
+
+	public async Task<IEnumerable<LogView>> GetLogsByUserAsync(int userId)
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"
+            SELECT l.""Id"", l.""Date"", a.""Name"" AS ActionName, u.""Login"" AS UserLogin
+            FROM ""Log"" l
+            JOIN ""Action"" a ON l.""ActionId"" = a.""Id""
+            JOIN ""User"" u ON l.""UserId"" = u.""Id""
+            WHERE l.""UserId"" = @UserId
+            ORDER BY l.""Date"" DESC;";
+		return await con.QueryAsync<LogView>(sql, new { UserId = userId });
+	}
+
+	public async Task BanUserAsync(int userId, string reason, DateTime? expiresAt = null)
+	{
+		await using var con = new NpgsqlConnection(_cs);
+		var sql = @"INSERT INTO ""Ban""(""UserId"", ""Reason"", ""BannedAt"", ""ExpiresAt"")
+                    VALUES (@UserId, @Reason, NOW(), @ExpiresAt);";
+		await con.ExecuteAsync(sql, new { UserId = userId, Reason = reason, ExpiresAt = expiresAt });
+	}
+}
+
+
+public class UserView
+{
+	public int Id { get; set; }
+	public string Login { get; set; } = string.Empty;
+	public bool HasChannel { get; set; }
 }

@@ -1,0 +1,35 @@
+﻿@using FrameCloud.Data
+@model IEnumerable<LogView>
+@{
+	ViewData["Title"] = "User Logs";
+	var userId = ViewBag.UserId;
+}
+
+<div class="text-center mb-4">
+	<h1 class="display-4">Логи пользователя #@userId</h1>
+</div>
+
+@if (Model == null || !Model.Any())
+{
+	<p class="text-muted">Логи отсутствуют.</p>
+}
+else
+{
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th>Дата</th>
+				<th>Действие</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var log in Model)
+			{
+				<tr>
+					<td>@log.Date.ToString("g")</td>
+					<td>@log.ActionName</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}

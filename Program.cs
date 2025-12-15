@@ -30,6 +30,7 @@ public class Program
 		builder.Services.AddSingleton<ISubscriptionRepository, SubscriptionRepository>();
 		builder.Services.AddSingleton<INotificationRepository, NotificationRepository>();
 		builder.Services.AddSingleton<IChannelRepository, ChannelRepository>();
+		builder.Services.AddSingleton<ILogRepository, LogRepository>();
 		builder.Services.AddSingleton<IWatchHistoryRepository, WatchHistoryRepository>();
 		builder.Services.AddSingleton<ITokenService>(sp => new TokenService(
 				jwtSection["Issuer"]!, jwtSection["Audience"]!, key, int.Parse(jwtSection["ExpiresMinutes"]!)
@@ -63,6 +64,7 @@ public class Program
 
 
 		app.UseJwtCookieAuth();
+		app.UseMiddleware<ActionLoggingMiddleware>();
 		app.UseHttpsRedirection();
 		app.UseStaticFiles();
 		app.UseStaticFiles(new StaticFileOptions

@@ -28,12 +28,10 @@ CREATE TABLE IF NOT EXISTS "Action" (
 
 
 CREATE TABLE IF NOT EXISTS "Log" (
-    "ActionId" INT NOT NULL,
-    "UserId" INT NOT NULL,
-    "Date" TIMESTAMPTZ NOT NULL,
-    PRIMARY KEY ("ActionId", "UserId"),
-    FOREIGN KEY ("ActionId") REFERENCES "Action"("Id"),
-    FOREIGN KEY ("UserId") REFERENCES "User"("Id")
+    "Id" INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    "ActionId" INT NOT NULL REFERENCES "Action"("Id"),
+    "UserId" INT NOT NULL REFERENCES "User"("Id"),
+    "Date" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 
@@ -337,3 +335,19 @@ CREATE OR REPLACE TRIGGER video_insert_notify_trigger
 AFTER INSERT ON "Video"
 FOR EACH ROW
 EXECUTE FUNCTION notify_on_new_video();
+
+
+CREATE OR REPLACE PROCEDURE log_action(action_public_id INTEGER, user_id INTEGER)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    act_id INT;
+BEGIN
+    SELECT "Id" INTO act_id FROM "Action" WHERE "PublicId" = action_public_id;
+
+    IF act_id IS NOT NULL THEN
+        INSERT INTO "Log"("ActionId", "UserId", "Date")
+        VALUES (act_id, user_id, NOW());
+    END IF;
+END;
+$$;

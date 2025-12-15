@@ -1,8 +1,32 @@
-﻿@{
-	ViewData["Title"] = "Admin";
-}
+﻿@using FrameCloud.Data
+@model IEnumerable<UserView>
 
-<div class="text-center">
-	<h1 class="display-4">Admin Page</h1>
-	<p>Здесь будут функции администрирования.</p>
-</div>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th>Логин</th>
+			<th>Есть канал</th>
+			<th>Действия</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var user in Model)
+		{
+			<tr>
+				<td>@user.Login</td>
+				<td>@(user.HasChannel ? "Да" : "Нет")</td>
+				<td>
+					@if (user.HasChannel)
+					{
+						<a asp-controller="Channel" asp-action="Index" asp-route-id="@user.Id"
+							 class="btn btn-sm btn-success">Перейти на канал</a>
+					}
+					<a asp-action="Ban" asp-route-userId="@user.Id"
+						 class="btn btn-sm btn-danger">Забанить</a>
+					<a asp-action="Logs" asp-route-userId="@user.Id"
+						 class="btn btn-sm btn-secondary">Посмотреть логи</a>
+				</td>
+			</tr>
+		}
+	</tbody>
+</table>
